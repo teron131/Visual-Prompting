@@ -1,0 +1,18 @@
+{
+  "name": "visual-prompting",
+  "version": "0.1.0",
+  "description": "AI-powered structured prompt generation for visual media",
+  "scripts": {
+    "dev": "npm --prefix visual-prompting-ui run dev",
+    "install:ui": "cd visual-prompting-ui && npm install",
+    "setup": "npm run install:ui && pip install -e ."
+  },
+  "workspaces": ["visual-prompting-ui"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/visual-prompting.git"
+  },
+  "keywords": ["ai", "prompts", "visual", "image", "video", "generation"],
+  "author": "Visual Prompting Team",
+  "license": "MIT"
+} 

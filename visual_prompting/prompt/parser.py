@@ -126,13 +126,4 @@ def reponse_to_string(prompt: Union[ImagePrompt, VideoPrompt]) -> str:
     # Join all parts with appropriate separators
     optimized_prompt = ", ".join(part.strip() for part in parts if part and part.strip())
 
-    # Add negative prompt if specified
-    if hasattr(prompt, "negative_prompt") and prompt.negative_prompt:
-        optimized_prompt += f" --negative {prompt.negative_prompt}"
-
-    # Add aspect ratio if not default
-    if hasattr(prompt, "aspect_ratio") and prompt.aspect_ratio:
-        if (isinstance(prompt, ImagePrompt) and prompt.aspect_ratio != "16:9") or (isinstance(prompt, VideoPrompt) and prompt.aspect_ratio != "16:9"):
-            optimized_prompt += f" --ar {prompt.aspect_ratio}"
-
     return optimized_prompt
