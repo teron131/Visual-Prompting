@@ -61,12 +61,8 @@ def success_response(message: str, data: dict = None) -> dict:
 
 @app.get("/")
 async def root():
-    """Serve the simple HTML interface."""
-    ui_file = UI_DIR / "simple-ui.html"
-    if ui_file.exists():
-        return FileResponse(ui_file)
-    else:
-        return {"message": "Visual Prompting API is running", "ui": "Visit /static/simple-ui.html for the interface"}
+    """API root endpoint."""
+    return {"message": "Visual Prompting API is running", "ui": "Visit http://localhost:3000 for the web interface", "docs": "Visit /docs for API documentation"}
 
 
 @app.post("/api/generate", response_model=GenerationResponse)

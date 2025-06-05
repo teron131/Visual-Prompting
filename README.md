@@ -146,9 +146,10 @@ Visual-Prompting/
 │   ├── llm.py                # LLM integration
 │   └── prompt/               # Prompt generation modules
 ├── visual-prompting-ui/      # Frontend (React/Next.js)
-│   ├── simple-ui.html        # Simple HTML interface
-│   ├── package.json
-│   └── app/                  # Next.js app (future)
+│   ├── app/                  # Next.js pages and layouts
+│   ├── components/           # React components
+│   ├── lib/                  # Utility functions
+│   └── package.json          # Frontend dependencies
 ├── start.sh                  # Backend startup script
 ├── package.json              # Root coordination
 └── requirements.txt          # Python dependencies
@@ -200,11 +201,13 @@ Supported models via OpenRouter:
 
 ### Endpoints
 
-- `GET /` - Web interface
+- `GET /` - API status and information
 - `POST /api/generate` - Generate prompts
 - `POST /api/generate-with-image` - Generate with image reference
 - `GET /api/enums` - Get available enum values
 - `GET /docs` - API documentation
+
+**Web Interface:** http://localhost:3000 (Next.js)
 
 ### Response Format
 
