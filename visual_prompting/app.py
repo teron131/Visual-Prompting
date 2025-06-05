@@ -1,16 +1,17 @@
 """FastAPI application for Visual Prompting web interface."""
 
 import os
+import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .config import OPENROUTER_API_KEY, validate_config
+from .config import OPENROUTER_API_KEY, UPLOADS_DIR, validate_config
 from .llm import image_to_base64, run_llm
 from .schema import AspectRatio, ImagePrompt, VideoPrompt
 
@@ -84,37 +85,48 @@ async def generate_prompts(request: GenerationRequest):
 
 
 @app.post("/api/generate-with-image")
-async def generate_with_image(mode: str, num_outputs: int = 1, text_input: Optional[str] = None, image: Optional[UploadFile] = File(None)):
+async def generate_with_image(mode: str = Form(...), num_outputs: int = Form(1), text_input: Optional[str] = Form(None), image: Optional[UploadFile] = File(None)):
     """Generate prompts with optional image input."""
+    image_path = None
+
     try:
         prompts = []
         user_text = text_input or "A beautiful scene"
-        image_path = None
 
         if image:
-            # Read and save image temporarily
+            # Validate image file type
+            if not image.content_type or not image.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image file.")
+
+            # Generate unique filename to avoid conflicts
+            file_extension = Path(image.filename).suffix if image.filename else ".jpg"
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            image_path = UPLOADS_DIR / unique_filename
+
+            # Save uploaded image
             image_content = await image.read()
-            temp_path = Path(f"/tmp/{image.filename}")
-            with open(temp_path, "wb") as f:
+            with open(image_path, "wb") as f:
                 f.write(image_content)
-            image_path = str(temp_path)
 
         for i in range(num_outputs):
             # Use the run_llm function with image path
-            prompt_str = run_llm(user_request=user_text, media_type=mode, image_path=image_path, return_string=True)
+            prompt_str = run_llm(user_request=user_text, media_type=mode, image_path=str(image_path) if image_path else None, return_string=True)
             prompts.append(prompt_str)
-
-        # Clean up temp file
-        if image_path and Path(image_path).exists():
-            Path(image_path).unlink()
 
         return GenerationResponse(status="success", prompts=prompts, mode=mode, num_outputs=num_outputs)
 
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        # Clean up temp file on error
-        if "image_path" in locals() and image_path and Path(image_path).exists():
-            Path(image_path).unlink()
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+    finally:
+        # Clean up uploaded file
+        if image_path and image_path.exists():
+            try:
+                image_path.unlink()
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up temporary file {image_path}: {cleanup_error}")
 
 
 @app.get("/api/enums")

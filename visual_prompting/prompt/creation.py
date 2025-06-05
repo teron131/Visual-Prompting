@@ -1,7 +1,6 @@
 import re
 from typing import Union, get_type_hints
 
-from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
@@ -191,8 +190,8 @@ Use this as a reference for the level of detail and professional terminology exp
 # =============================================================================
 
 
-def create_image_prompt_template() -> ChatPromptTemplate:
-    """Create a comprehensive ChatPromptTemplate for generating structured image prompts."""
+def create_image_prompt_template() -> str:
+    """Create a comprehensive system prompt for generating structured image prompts."""
 
     # Get model fields and type hints (Pydantic V2 compatible)
     model_fields = getattr(ImagePrompt, "model_fields", getattr(ImagePrompt, "__fields__", {}))
@@ -342,11 +341,11 @@ Use these fields to elevate prompt quality and match user intent:
 ## Response Requirements
 Return a valid JSON object matching the {ImagePrompt.__name__} structure exactly. Include all required fields and relevant optional fields based on user request, creative vision, and industry best practices."""
 
-    return ChatPromptTemplate.from_messages([("system", system_content), ("human", "Create a professional image generation prompt based on this request: {user_request}")])
+    return system_content
 
 
-def create_video_prompt_template() -> ChatPromptTemplate:
-    """Create a comprehensive ChatPromptTemplate for generating structured video prompts."""
+def create_video_prompt_template() -> str:
+    """Create a comprehensive system prompt for generating structured video prompts."""
 
     # Get model fields and type hints (Pydantic V2 compatible)
     model_fields = getattr(VideoPrompt, "model_fields", getattr(VideoPrompt, "__fields__", {}))
@@ -505,4 +504,4 @@ Use these fields to elevate prompt quality and match user intent:
 ## Response Requirements
 Return a valid JSON object matching the {VideoPrompt.__name__} structure exactly. Include all required fields and relevant optional fields based on user request, creative vision, and industry best practices."""
 
-    return ChatPromptTemplate.from_messages([("system", system_content), ("human", "Create a professional video generation prompt based on this request: {user_request}")])
+    return system_content

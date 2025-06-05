@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from .prompt.creation import create_image_prompt_template, create_video_prompt_template
@@ -55,16 +55,16 @@ def create_openrouter_llm(model: str = "openai/gpt-4.1-mini") -> ChatOpenAI:
 
 
 def run_llm(
-    user_request: str,
+    user_request: Optional[str] = None,
     media_type: str = "image",
     model: str = "openai/gpt-4.1-mini",
     image_path: Optional[str] = None,
     return_string: bool = False,
 ) -> Union[ImagePrompt, VideoPrompt, str]:
-    """Generate structured prompt using ChatPromptTemplate and OpenRouter LLM.
+    """Generate structured prompt using system prompts and OpenRouter LLM.
 
     Args:
-        user_request: User's description or request for media generation
+        user_request: Optional user's description or request for media generation
         media_type: Either "image" or "video"
         model: OpenRouter model to use
         image_path: Optional reference image path
@@ -72,43 +72,56 @@ def run_llm(
 
     Returns:
         Structured ImagePrompt/VideoPrompt object or optimized string prompt
+
+    Raises:
+        ValueError: If neither user_request nor image_path is provided
     """
     if media_type not in ("image", "video"):
         raise ValueError("media_type must be 'image' or 'video'")
 
+    # Validate that at least one input is provided
+    if not user_request and not image_path:
+        raise ValueError("Either user_request or image_path must be provided")
+
     llm = create_openrouter_llm(model)
+
+    # Get the appropriate SystemPrompt and response class
     if media_type == "image":
-        template = create_image_prompt_template()
+        system_prompt = create_image_prompt_template()
         response_class = ImagePrompt
     else:
-        template = create_video_prompt_template()
+        system_prompt = create_video_prompt_template()
         response_class = VideoPrompt
 
-    formatted_prompt = template.format_messages(
-        media_type=media_type,
-        user_request=user_request,
-    )
+    messages = [SystemMessage(content=system_prompt)]
 
+    # Create HumanMessage
+    content = [
+        {
+            "type": "text",
+            "text": f"Create a {media_type} generation prompt based on this request: {user_request}" if user_request else "Reverse engineer the image and create a prompt for generating it",
+        },
+    ]
+
+    # Create human message based on whether we have an image or not
     if image_path:
         image_base64 = image_to_base64(image_path)
-        human_content = [
+        content.append(
             {
                 "type": "image_url",
                 "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
-            },
-            {
-                "type": "text",
-                "text": f"Create a {media_type} generation prompt based on this request: {user_request}",
-            },
-        ]
-        formatted_prompt[-1] = HumanMessage(content=human_content)
+            }
+        )
 
+    messages.append(HumanMessage(content=content))
+
+    # Create structured LLM and invoke
     structured_llm = llm.with_structured_output(
         response_class,
         method="function_calling",
     )
 
-    structured_result = structured_llm.invoke(formatted_prompt)
+    structured_result = structured_llm.invoke(messages)
 
     if return_string:
         return reponse_to_string(structured_result)

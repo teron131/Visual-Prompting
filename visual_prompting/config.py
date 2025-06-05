@@ -22,6 +22,7 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "openai/gpt-4.1-mini")
 PROJECT_ROOT = Path(__file__).parent.parent
 CACHE_DIR = PROJECT_ROOT / ".cache"
 LOGS_DIR = PROJECT_ROOT / "logs"
+UPLOADS_DIR = CACHE_DIR / "upload"
 
 # Feature Flags
 ENABLE_IMAGE_UPLOAD = os.getenv("ENABLE_IMAGE_UPLOAD", "true").lower() == "true"
@@ -40,3 +41,4 @@ def validate_config():
     # Create directories if they don't exist
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)

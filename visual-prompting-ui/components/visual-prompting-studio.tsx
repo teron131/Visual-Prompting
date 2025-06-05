@@ -49,7 +49,8 @@ export function VisualPromptingStudio() {
   }
 
   const generatePrompts = async () => {
-    if (!promptText.trim()) return
+    // Check if we have either text or image (matching backend validation)
+    if (!promptText.trim() && !selectedImage) return
 
     setIsGenerating(true)
 
@@ -236,7 +237,7 @@ export function VisualPromptingStudio() {
                 {/* Generate Button */}
                 <Button
                   onClick={generatePrompts}
-                  disabled={!promptText.trim() || isGenerating}
+                  disabled={(!promptText.trim() && !selectedImage) || isGenerating}
                   className="w-full"
                 >
                   {isGenerating ? (
